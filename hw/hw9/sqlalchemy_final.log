@@ -1,0 +1,256 @@
+# IPython log file
+
+# Tue, 15 Nov 2016 14:16:54
+import sqlalchemy
+# Tue, 15 Nov 2016 14:17:01
+sqlalchemy.__version__
+#[Out]# '1.0.12'
+# Tue, 15 Nov 2016 14:17:17
+from sqlalchemy import create_engine
+# Tue, 15 Nov 2016 14:18:05
+engine= create_engine('sqlite:///:memory:', echo=True)
+# Tue, 15 Nov 2016 14:19:57
+from sqlalchemy.ext.declarative import declarative_base
+# Tue, 15 Nov 2016 14:20:09
+Base= declarative_base()
+# Tue, 15 Nov 2016 14:20:38
+from sqlalchemy import Column, Integer, String
+# Tue, 15 Nov 2016 14:23:34
+class User(Base):
+    __tablename__='users'
+    id= Column(Integer, primary_key=True)
+    name = Column(String)
+    fullname= Column(String)
+    password= Column(String)
+    def __repr__(self):
+        return "<User(name='%s', fullname='%s', password='%s'>" % (
+        self.name, self.fullname, self.password)
+    
+# Tue, 15 Nov 2016 14:23:46
+User.__table__
+#[Out]# Table('users', MetaData(bind=None), Column('id', Integer(), table=<users>, primary_key=True, nullable=False), Column('name', String(), table=<users>), Column('fullname', String(), table=<users>), Column('password', String(), table=<users>), schema=None)
+# Tue, 15 Nov 2016 14:24:21
+Base.metadata.create_all(engine)
+# Tue, 15 Nov 2016 14:25:26
+ed_user= User(name='ed', fullname='Ed Jones', password='edspassword')
+# Tue, 15 Nov 2016 14:25:38
+ed_user.name
+#[Out]# 'ed'
+# Tue, 15 Nov 2016 14:25:45
+ed_user.password
+#[Out]# 'edspassword'
+# Tue, 15 Nov 2016 14:25:58
+str(ed_user.id)
+#[Out]# 'None'
+# Tue, 15 Nov 2016 14:26:30
+from sqlalchemy.orm import sessionmaker
+# Tue, 15 Nov 2016 14:26:41
+Session= sessionmaker(bind=engine)
+# Tue, 15 Nov 2016 14:27:06
+Session.configure(bind=engine)
+# Tue, 15 Nov 2016 14:27:31
+session= Session()
+# Tue, 15 Nov 2016 14:28:13
+ed_user= User(name='ed', fullname='Ed Jones', password='edspassword')
+# Tue, 15 Nov 2016 14:28:23
+session.add(ed_user)
+# Tue, 15 Nov 2016 14:29:07
+our_user = session.query(User).filter_by(name='ed').first()
+# Tue, 15 Nov 2016 14:29:32
+our_user
+#[Out]# <User(name='ed', fullname='Ed Jones', password='edspassword'>
+# Tue, 15 Nov 2016 14:29:50
+ed_user is our_user
+#[Out]# True
+# Tue, 15 Nov 2016 14:31:32
+session.add_all([
+User(name='wendy', fullname='Wendy Williams', password='foobar'),
+User(name='mary', fullname='Mary Contrary', password='xxg527'),
+User(name='fred', fullname='Fred Flinstone', password='blah')])
+# Tue, 15 Nov 2016 14:31:49
+ed_user.password= 'f8s7ccs'
+# Tue, 15 Nov 2016 14:31:55
+session.dirty
+#[Out]# IdentitySet([<User(name='ed', fullname='Ed Jones', password='f8s7ccs'>])
+# Tue, 15 Nov 2016 14:32:02
+session.new
+#[Out]# IdentitySet([<User(name='fred', fullname='Fred Flinstone', password='blah'>, <User(name='mary', fullname='Mary Contrary', password='xxg527'>, <User(name='wendy', fullname='Wendy Williams', password='foobar'>])
+# Tue, 15 Nov 2016 14:32:12
+session.commit()
+# Tue, 15 Nov 2016 14:32:22
+ed_user.id
+#[Out]# 1
+# Tue, 15 Nov 2016 14:33:34
+ed_user.name= 'Edwardo'
+# Tue, 15 Nov 2016 14:34:05
+fake_user= User(name='fakeuser', fullname='Invalid', password='12345')
+# Tue, 15 Nov 2016 14:34:13
+session.add(fake_user)
+# Tue, 15 Nov 2016 14:35:40
+session.query(User).filter(User.name.in_(['Edwardo', 'fakeuser'])).all()
+#[Out]# [<User(name='Edwardo', fullname='Ed Jones', password='f8s7ccs'>,
+#[Out]#  <User(name='fakeuser', fullname='Invalid', password='12345'>]
+# Tue, 15 Nov 2016 14:35:57
+session.rollback()
+# Tue, 15 Nov 2016 14:36:09
+ed_user.name
+#[Out]# 'ed'
+# Tue, 15 Nov 2016 14:36:22
+fake_user in session
+#[Out]# False
+# Tue, 15 Nov 2016 14:37:20
+session.query(User).filter(User.name.in_(['ed', 'fakeuser'])).all()
+#[Out]# [<User(name='ed', fullname='Ed Jones', password='f8s7ccs'>]
+# Tue, 15 Nov 2016 14:39:16
+for instance in session.query(User).order_by(User_id):
+    print(instance.name, instance.fullname)
+    
+# Tue, 15 Nov 2016 14:39:28
+for instance in session.query(User).order_by(User.id):
+    print(instance.name, instance.fullname)
+    
+# Tue, 15 Nov 2016 14:40:17
+for name, fullname in session.query(User.name, User.fullname):
+    print(name, fullname)
+    
+# Tue, 15 Nov 2016 14:40:52
+for row in session.query(User, User.name).all():
+    print(row.User, row.name)
+    
+# Tue, 15 Nov 2016 14:41:41
+for row in session.query(User.name.label('name_label')).all():
+    print(row.name_label)
+    
+# Tue, 15 Nov 2016 14:44:12
+from sqlalchemy.orm import aliased
+# Tue, 15 Nov 2016 14:44:32
+user_alias= aliased(User, name='user_alias')
+# Tue, 15 Nov 2016 14:45:09
+for row in session.query(user_alias, user_alias.name).all():
+    print(row.user_alias)
+    
+# Tue, 15 Nov 2016 14:45:42
+for u in session.query(User).order_by(User.id)[1:3]:
+    print(u)
+    
+# Tue, 15 Nov 2016 14:46:36
+for name, in session.query(User.name).filter_by(fullname='Ed Jones'):
+    print(name)
+    
+# Tue, 15 Nov 2016 14:47:38
+for name, in session.query(User.name).filter(User.fullname=='Ed Jones'):
+    print(name)
+    
+# Tue, 15 Nov 2016 14:48:46
+for user in session.query(User).filter(User.name=='ed').filter(User.fullname=='Ed Jones'):
+    print(user)
+    
+# Tue, 15 Nov 2016 14:49:43
+query= session.query(User).filter(User.name.like('%ed')).order_by(User.id)
+# Tue, 15 Nov 2016 14:49:48
+query.all()
+#[Out]# [<User(name='ed', fullname='Ed Jones', password='f8s7ccs'>,
+#[Out]#  <User(name='fred', fullname='Fred Flinstone', password='blah'>]
+# Tue, 15 Nov 2016 14:49:58
+query.first()
+#[Out]# <User(name='ed', fullname='Ed Jones', password='f8s7ccs'>
+# Tue, 15 Nov 2016 14:50:18
+user = query.one()
+# Tue, 15 Nov 2016 14:50:41
+user = query.filter(User.id==99).one()
+# Tue, 15 Nov 2016 14:51:35
+query= session.query(User.id).filter(User.name=='ed').order_by(User.id)
+# Tue, 15 Nov 2016 14:51:40
+query.scalar()
+#[Out]# 1
+# Tue, 15 Nov 2016 14:52:01
+from sqlalchemy import text
+# Tue, 15 Nov 2016 14:52:51
+for user in session.query(User).filter(text("id<224")).order_by(text("id")).all():
+    print(user.name)
+    
+# Tue, 15 Nov 2016 14:53:19
+from sqlalchemy import func
+# Tue, 15 Nov 2016 14:54:02
+session.query(func.count(User.name), User.name).group_by(User.name).all()
+#[Out]# [(1, 'ed'), (1, 'fred'), (1, 'mary'), (1, 'wendy')]
+# Tue, 15 Nov 2016 14:54:26
+from sqlalchemy import ForeignKey
+# Tue, 15 Nov 2016 14:54:35
+from sqlalchemy.orm import relationship
+# Tue, 15 Nov 2016 14:57:20
+class Address(Base):
+    __tablename__='addresses'
+    id= Column(Integer, primary_key=True)
+    email_address = Column(String, nullable=False)
+    user_id= Column(Integer, ForeignKey('users.id'))
+    user= relationship("User", back_populates="addresses")
+    def __repr__(self):
+        return "<Address(email_address='%s')>" % self.email_address
+    
+# Tue, 15 Nov 2016 14:58:02
+User.addresses= relationship(
+"Address", order_by=Address.id, back_populates="user")
+# Tue, 15 Nov 2016 14:58:20
+Base.metadata.create_all(engine)
+# Tue, 15 Nov 2016 14:59:03
+jack = User(name='jack', fullname='Jack Bean', password='gjffdd')
+# Tue, 15 Nov 2016 14:59:10
+jack.addresses
+#[Out]# []
+# Tue, 15 Nov 2016 14:59:55
+jack.addresses = [
+Address(email_address='jack@google.com'),
+Address(email_address='j25@yahoo.com')]
+# Tue, 15 Nov 2016 15:00:15
+jack.addresses[1]
+#[Out]# <Address(email_address='j25@yahoo.com')>
+# Tue, 15 Nov 2016 15:00:19
+jack.addresses[1].user
+#[Out]# <User(name='jack', fullname='Jack Bean', password='gjffdd'>
+# Tue, 15 Nov 2016 15:00:27
+session.add(jack)
+# Tue, 15 Nov 2016 15:00:31
+session.commit()
+# Tue, 15 Nov 2016 15:01:06
+jack = session.query(User).filter_by(name='jack').one()
+# Tue, 15 Nov 2016 15:01:12
+jack
+#[Out]# <User(name='jack', fullname='Jack Bean', password='gjffdd'>
+# Tue, 15 Nov 2016 15:01:21
+jack.addresses
+#[Out]# [<Address(email_address='jack@google.com')>,
+#[Out]#  <Address(email_address='j25@yahoo.com')>]
+# Tue, 15 Nov 2016 15:03:01
+for u, a in session.query(User, Address).filter(User.id==Address.user_id).filter(Address.email_address=='jack@google.com').all():
+    print(u)
+    print(a)
+    
+# Tue, 15 Nov 2016 15:04:28
+session.query(User).join(Address).filter(Address.email_address=='jack@google.com').all()
+#[Out]# [<User(name='jack', fullname='Jack Bean', password='gjffdd'>]
+# Tue, 15 Nov 2016 15:04:51
+query.join(Address, User.id==Address.user_id)
+#[Out]# <sqlalchemy.orm.query.Query at 0x7f7f5dbcca90>
+# Tue, 15 Nov 2016 15:05:06
+query.join(User.addresses)
+#[Out]# <sqlalchemy.orm.query.Query at 0x7f7f5dbcc7f0>
+# Tue, 15 Nov 2016 15:05:27
+query.join(Address, User.addresses)
+#[Out]# <sqlalchemy.orm.query.Query at 0x7f7f5dbccc18>
+# Tue, 15 Nov 2016 15:05:40
+query.join('addresses')
+#[Out]# <sqlalchemy.orm.query.Query at 0x7f7f5dbccb70>
+# Tue, 15 Nov 2016 15:05:56
+query.outerjoin(User.addresses)
+#[Out]# <sqlalchemy.orm.query.Query at 0x7f7f5dbcc668>
+# Tue, 15 Nov 2016 15:06:10
+from sqlalchemy.orm import aliased
+# Tue, 15 Nov 2016 15:06:25
+adalias1= aliased(Address)
+# Tue, 15 Nov 2016 15:06:31
+adalias2= aliased(Address)
+# Tue, 15 Nov 2016 15:09:01
+for username, email1, email2 in session.query(User.name, adalias1.email_address, adalias2.email_address).join(adalias1, User.addresses).join(adalias2, User.addresses).filter(adalias1.email_address=='jack@google.com').filter(adalias2.email_address=='j25@yahoo.com'):
+    print(username, email1, email2)
+    
